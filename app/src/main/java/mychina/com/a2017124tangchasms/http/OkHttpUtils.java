@@ -8,10 +8,14 @@ import java.util.Map;
 import java.util.Set;
 import java.util.concurrent.TimeUnit;
 
+import mychina.com.a2017124tangchasms.bean.BaseBean;
 import okhttp3.Call;
+import okhttp3.FormBody;
 import okhttp3.Interceptor;
+import okhttp3.MediaType;
 import okhttp3.OkHttpClient;
 import okhttp3.Request;
+import okhttp3.RequestBody;
 import okhttp3.Response;
 
 /**
@@ -99,5 +103,70 @@ public class OkHttpUtils {
         sb.deleteCharAt(sb.length() - 1);
         String newUrl = sb.toString();
         return newUrl;
+    }
+
+    public String postString1(String url, HashMap<String, String> map) throws IOException {
+        Response response;
+        RequestBody requestBody;
+        if (url == null || url.equals("")) {
+            throw new RuntimeException("网址不能为空");
+        }
+        //创建一个请求体
+        MediaType JSON = MediaType.parse("application/json; charset=utf-8");
+        if (map != null && !map.isEmpty()) {
+            String json = map2Json(map);
+            System.out.print(json);
+            requestBody = RequestBody.create(JSON, json);
+            Request request = new Request.Builder()
+                    .url(url)
+                    .post(requestBody)
+                    .build();
+            response = client.newCall(request).execute();
+        } else {
+            //非法参数异常
+            throw new IllegalArgumentException("缺少参数");
+        }
+        return response.body().string();
+    }
+
+    public String postString(String url, HashMap<String, String> map) throws IOException {
+        Response response;
+        RequestBody requestBody;
+        if (url == null || url.equals("")) {
+            throw new RuntimeException("网址不能为空");
+        }
+        //创建一个请求体
+//        MediaType JSON=MediaType.parse("application/json; charset=utf-8");
+        if (map != null && !map.isEmpty()) {
+            //            String json=map2Json(map);
+//            requestBody=RequestBody.create(JSON,json);
+            FormBody.Builder builder = new FormBody.Builder();
+            Set<Map.Entry<String, String>> entries = map.entrySet();
+            for (Map.Entry<String, String> entry : entries
+                    ) {
+                builder.add(entry.getKey(), entry.getValue());
+            }
+            FormBody formBody = builder.build();
+            Request request = new Request.Builder()
+                    .url(url)
+                    .post(formBody)
+                    .build();
+            response = client.newCall(request).execute();
+        } else {
+            //非法参数异常
+            throw new IllegalArgumentException("缺少参数");
+        }
+        return response.body().string();
+    }
+
+    //通过map转成json串
+    private String map2Json(HashMap<String, String> map) {
+        String s = gson.toJson(map);
+        return s;
+    }
+    public BaseBean postBean(String url,HashMap<String,String>map) throws IOException {
+        String post = postString(url,map);
+        BaseBean<Object>bean = gson.fromJson(post,BaseBean.class);
+        return bean;
     }
 }
